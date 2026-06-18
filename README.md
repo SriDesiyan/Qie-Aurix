@@ -132,6 +132,21 @@ Anchors audit summaries and system integrity records on-chain for traceability a
 ### Protection Policies
 Lets users define custom rules for automated financial protection, such as rebalancing or reserve allocation.
 
+Screenshots & Media
+
+![Cover Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct1.png)
+![Problem Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct2.png)
+![Solution Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/CT3.png)
+![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct4.png)
+![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct5.png)
+![Guardian Mode Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct6.png)
+![QIE Ecosystem Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct7.png)
+![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct8.png)
+
+![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct9.png)
+![Vision Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct10.png)
+
+
 ---
 
 ## How Aurix Works
@@ -337,19 +352,6 @@ Run Safety Audit
 Anchor a system integrity report on-chain.
 Submit Recovery Request
 Test the accidental-transfer recovery flow.
-Screenshots & Media
-
-![Cover Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct1.png)
-![Problem Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct2.png)
-![Solution Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/CT3.png)
-![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct4.png)
-![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct5.png)
-![Guardian Mode Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct6.png)
-![QIE Ecosystem Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct7.png)
-![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct8.png)
-
-![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct9.png)
-![Vision Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct10.png)
 
 Repository Structure
 qie-aurix/
