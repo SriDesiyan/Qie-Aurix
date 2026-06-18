@@ -4,29 +4,36 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { qiePassConnector, type ConnectionState } from "../lib/qie/QiePassConnector";
+import AuthSelector from "../components/auth/AuthSelector";
+import type { QiePassIdentity } from "@aurix/core";
 import DynamicBackground from "../components/DynamicBackground";
 import AurixLogo from "../components/AurixLogo";
-import { ShieldCheck, RefreshCw, KeyRound, Eye } from "lucide-react";
+import { Eye, Check, AlertTriangle } from "lucide-react";
 import dynamic from "next/dynamic";
+import AurixShieldIcon from "../components/icons/AurixShieldIcon";
+import GuardianModeIcon from "../components/icons/GuardianModeIcon";
+import RecoveryLayerIcon from "../components/icons/RecoveryLayerIcon";
+import FamilyVaultIcon from "../components/icons/FamilyVaultIcon";
+import { useSession } from "../context/SessionContext";
 
 const ResilienceCore3D = dynamic(() => import("../components/ResilienceCore3D"), { ssr: false });
 
 // Select 3 best feature cards as requested in landing page structure
 const LANDING_FEATURES = [
   {
-    icon: ShieldCheck,
+    icon: GuardianModeIcon,
     title: "Guardian Mode™",
     description: "Deploy emergency reserves, activate family vaults, and initialize security firewalls simultaneously in one click.",
     color: "var(--color-gold)",
   },
   {
-    icon: RefreshCw,
+    icon: RecoveryLayerIcon,
     title: "Accidental Recovery",
     description: "Reclaim assets sent to incorrect contract addresses permissionlessly using cryptographic signatures and oracle consensus.",
     color: "var(--color-teal)",
   },
   {
-    icon: KeyRound,
+    icon: FamilyVaultIcon,
     title: "Multi-Heir Vaults",
     description: "Secure legacy assets behind customizable time-locks and allocation parameters mapped to verified QIE Pass IDs.",
     color: "#a78bfa",
@@ -35,11 +42,10 @@ const LANDING_FEATURES = [
 
 export default function LandingPage() {
   const [connState, setConnState] = useState<ConnectionState>({ status: "disconnected" });
+  const { setDemoMode } = useSession();
 
-  const handleConnect = async () => {
-    setConnState({ status: "connecting" });
-    const result = await qiePassConnector.connect();
-    setConnState(result);
+  const handleAuthSuccess = (address: string, identity: QiePassIdentity) => {
+    setConnState({ status: "connected", address, identity });
   };
 
   return (
@@ -58,11 +64,18 @@ export default function LandingPage() {
         }}
       >
         <AurixLogo variant="wordmark" size={36} />
-        <Link href="/dashboard" id="demo-dashboard-btn" style={{ textDecoration: "none" }}>
-          <button className="aurix-btn aurix-btn-outline" style={{ fontSize: "0.8125rem", padding: "10px 22px" }}>
-            <Eye size={14} /> Explore Demo
-          </button>
-        </Link>
+        {process.env.NEXT_PUBLIC_MODE !== "production" && (
+          <Link
+            href="/dashboard"
+            id="demo-dashboard-btn"
+            style={{ textDecoration: "none" }}
+            onClick={() => setDemoMode()}
+          >
+            <button className="aurix-btn aurix-btn-outline" style={{ fontSize: "0.8125rem", padding: "10px 22px" }}>
+              <Eye size={14} /> Explore Demo
+            </button>
+          </Link>
+        )}
       </header>
 
       {/* Hero Section */}
@@ -101,7 +114,7 @@ export default function LandingPage() {
               marginBottom: "28px",
             }}
           >
-            🛡️ Decentralized Financial Immune System
+            <AurixShieldIcon size={14} color="var(--color-gold)" /> Decentralized Financial Immune System
           </div>
 
           {/* Headline */}
@@ -135,16 +148,7 @@ export default function LandingPage() {
           <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap", marginBottom: "60px" }}>
             <AnimatePresence mode="wait">
               {connState.status === "disconnected" && (
-                <motion.button
-                  key="connect"
-                  className="aurix-btn aurix-btn-guardian"
-                  onClick={handleConnect}
-                  id="connect-qie-pass-btn"
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  🔑 Connect QIE Pass
-                </motion.button>
+                <AuthSelector onAuthSuccess={handleAuthSuccess} />
               )}
               {connState.status === "connecting" && (
                 <motion.button
@@ -174,9 +178,12 @@ export default function LandingPage() {
                       borderRadius: "var(--radius-full)",
                       fontSize: "0.875rem",
                       fontWeight: 600,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
                     }}
                   >
-                    ✓ QIE Pass Linked: {connState.identity.tier}
+                    <Check size={14} /> QIE Pass Linked: {connState.identity.tier}
                   </div>
                   <Link href="/dashboard" id="enter-dashboard-btn" style={{ textDecoration: "none" }}>
                     <motion.button
@@ -190,8 +197,8 @@ export default function LandingPage() {
                 </motion.div>
               )}
               {connState.status === "no_pass" && (
-                <motion.p key="no_pass" style={{ color: "var(--color-amber)", fontSize: "0.875rem" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  ⚠️ QIE Pass required. Please initialize a registry profile to activate Aurix.
+                <motion.p key="no_pass" style={{ color: "var(--color-amber)", fontSize: "0.875rem", display: "inline-flex", alignItems: "center", gap: "6px" }} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <AlertTriangle size={14} /> QIE Pass required. Please initialize a registry profile to activate Aurix.
                 </motion.p>
               )}
               {connState.status === "error" && (

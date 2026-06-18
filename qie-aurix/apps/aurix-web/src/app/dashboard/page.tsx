@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Sparkles, MessageSquare, Send, AlertOctagon, HelpCircle, CheckCircle2 } from "lucide-react";
+import { Shield, Sparkles, MessageSquare, Send, AlertOctagon, HelpCircle, CheckCircle2, Check, Zap } from "lucide-react";
 import GuardianGauge from "../../components/GuardianGauge";
 import TrustGraph from "../../components/TrustGraph";
 import ScoreBreakdownGrid from "../../components/ScoreBreakdownGrid";
 import ProtectionTimeline from "../../components/ProtectionTimeline";
 import StatusPill from "../../components/StatusPill";
+import GuardianModeIcon from "../../components/icons/GuardianModeIcon";
+import { useSession } from "../../context/SessionContext";
 
 // Mock Data
 const MOCK_SCORE = {
@@ -60,6 +62,8 @@ export default function DashboardPage() {
   const [chatMessages, setChatMessages] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const chatRef = useRef<HTMLDivElement>(null);
 
+  const { identity } = useSession();
+
   useEffect(() => {
     setLoaded(true);
   }, []);
@@ -88,14 +92,59 @@ export default function DashboardPage() {
     if (msg.toLowerCase().includes("protect") || msg.toLowerCase().includes("guardian")) {
       reply = "Resilience evaluation complete. Swapping a portion of volatile tokens to QUSDC and activating Guardian Mode is highly recommended to secure your assets.";
     } else if (msg.toLowerCase().includes("score")) {
-      reply = "Your Resilience Score is 743. You can boost this score by establishing a stablecoin vault reserve.";
+      reply = `Your Resilience Score is ${finalScore}. You can boost this score by establishing a stablecoin vault reserve.`;
     }
     setChatMessages((prev) => [...prev, { role: "ai", text: reply }]);
     setTimeout(() => chatRef.current?.scrollTo({ top: 9999, behavior: "smooth" }), 100);
   };
 
-  const finalScore = guardianActive ? Math.min(MOCK_SCORE.total + 58, 1000) : MOCK_SCORE.total;
-  const scoreLabel = finalScore >= 800 ? "GUARDIAN" : "STRONG";
+  const baseScore = identity?.tier === "BASIC" 
+    ? 380 
+    : identity?.tier === "VERIFIED" 
+      ? 640 
+      : identity?.tier === "GUARDIAN" 
+        ? 801 
+        : 743;
+
+  const finalScore = guardianActive ? Math.min(baseScore + 58, 1000) : baseScore;
+  const scoreLabel = finalScore >= 800 ? "GUARDIAN" : finalScore >= 600 ? "STRONG" : "MODERATE";
+
+  const dynamicStablecoinBuffer = identity?.tier === "BASIC" ? 12 : identity?.tier === "VERIFIED" ? 34 : 61;
+  const dynamicRecoveryReadiness = identity?.tier === "BASIC" ? 10 : identity?.tier === "VERIFIED" ? 48 : 72;
+
+  const scoreBreakdown = {
+    total: finalScore,
+    label: scoreLabel,
+    asset_stability:    { value: identity?.tier === "BASIC" ? 45 : 68, label: "Asset Stability", reason: "Lending configurations active & healthy" },
+    recovery_readiness: { value: dynamicRecoveryReadiness, label: "Recovery Readiness", reason: "AurixRecoveryGate deployed 18 days ago" },
+    contract_integrity: { value: identity?.tier === "BASIC" ? 50 : 85, label: "Contract Integrity", reason: "Zero warning logs on audited anchors" },
+    stablecoin_buffer:  { value: dynamicStablecoinBuffer, label: "Stablecoin Buffer", reason: "Stable reserve within monitored bounds" },
+    chain_breadth:      { value: identity?.tier === "BASIC" ? 30 : 60, label: "Chain Breadth", reason: "Asset risk diversified across layers" },
+  };
+
+  const dynamicTrust = {
+    identity_trust: identity?.tier === "BASIC" ? 30 : identity?.tier === "VERIFIED" ? 60 : 88,
+    validator_participation: identity?.isValidator ? 72 : 0,
+    community_contribution: identity?.communityScore || 50,
+    on_chain_reliability: identity?.tier === "BASIC" ? 45 : 75,
+    composite: identity?.tier === "BASIC" ? 38.5 : identity?.tier === "VERIFIED" ? 61.2 : 84.2,
+    tier: identity?.tier || "TRUSTED",
+  };
+
+  const dynamicRisk = {
+    triggers: identity?.tier === "BASIC"
+      ? [
+          { id: "low_stablecoin", label: "Low Stablecoin Buffer", severity: "warning" as const, description: "QUSDC stable holdings below 15%." },
+          { id: "missing_family", label: "No Family Vault", severity: "warning" as const, description: "No heir allocation designations found." },
+          { id: "no_recovery", label: "No Recovery Protection", severity: "warning" as const, description: "AurixRecoveryGate not configured." },
+        ]
+      : identity?.tier === "VERIFIED"
+        ? [
+            { id: "low_stablecoin", label: "Low Stablecoin Buffer", severity: "warning" as const, description: "QUSDC stable holdings below 15%." },
+          ]
+        : [],
+    overall_risk: identity?.tier === "BASIC" ? "HIGH" : identity?.tier === "VERIFIED" ? "MEDIUM" : "LOW",
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
@@ -114,11 +163,11 @@ export default function DashboardPage() {
             <GuardianGauge score={finalScore} label={scoreLabel} size={190} />
           </div>
           <ScoreBreakdownGrid
-            assetStability={MOCK_SCORE.asset_stability}
-            recoveryReadiness={MOCK_SCORE.recovery_readiness}
-            contractIntegrity={MOCK_SCORE.contract_integrity}
-            stablecoinBuffer={MOCK_SCORE.stablecoin_buffer}
-            chainBreadth={MOCK_SCORE.chain_breadth}
+            assetStability={scoreBreakdown.asset_stability}
+            recoveryReadiness={scoreBreakdown.recovery_readiness}
+            contractIntegrity={scoreBreakdown.contract_integrity}
+            stablecoinBuffer={scoreBreakdown.stablecoin_buffer}
+            chainBreadth={scoreBreakdown.chain_breadth}
           />
         </motion.div>
 
@@ -156,8 +205,9 @@ export default function DashboardPage() {
                   id="activate-guardian-btn"
                   className="aurix-btn aurix-btn-guardian w-full"
                   onClick={activateGuardian}
+                  style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}
                 >
-                  ⚡ Activate Guardian Mode
+                  <Zap size={14} /> Activate Guardian Mode
                 </button>
               </motion.div>
             )}
@@ -238,11 +288,11 @@ export default function DashboardPage() {
             <span style={{ fontSize: "0.75rem", color: "var(--color-text-muted)", display: "flex", alignItems: "center", gap: "4px" }}><Sparkles size={12} style={{ color: "var(--color-gold)" }} /> verified pass</span>
           </div>
           <TrustGraph
-            identityTrust={MOCK_TRUST.identity_trust}
-            validatorParticipation={MOCK_TRUST.validator_participation}
-            communityContribution={MOCK_TRUST.community_contribution}
-            onChainReliability={MOCK_TRUST.on_chain_reliability}
-            composite={MOCK_TRUST.composite}
+            identityTrust={dynamicTrust.identity_trust}
+            validatorParticipation={dynamicTrust.validator_participation}
+            communityContribution={dynamicTrust.community_contribution}
+            onChainReliability={dynamicTrust.on_chain_reliability}
+            composite={dynamicTrust.composite}
           />
         </motion.div>
       </div>
@@ -260,11 +310,11 @@ export default function DashboardPage() {
         <motion.div className="aurix-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
             <h3>Risk Warnings</h3>
-            <StatusPill status="warning" label="Medium Exposure" />
+            <StatusPill status={dynamicRisk.overall_risk === "LOW" ? "safe" : "warning"} label={dynamicRisk.overall_risk === "LOW" ? "No Warnings" : `${dynamicRisk.overall_risk} Exposure`} />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {MOCK_RISK.triggers.map((trigger) => (
+            {dynamicRisk.triggers.map((trigger) => (
               <div
                 key={trigger.id}
                 style={{
@@ -282,15 +332,26 @@ export default function DashboardPage() {
                 <p style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", lineHeight: 1.5 }}>{trigger.description}</p>
               </div>
             ))}
+            {dynamicRisk.triggers.length === 0 && (
+              <div style={{ color: "var(--color-text-muted)", fontSize: "0.8rem", textAlign: "center", padding: "20px 0", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                <Check size={14} color="var(--color-safe)" /> No active risk warnings detected. Your portfolio is healthy.
+              </div>
+            )}
           </div>
 
           {!guardianActive ? (
-            <div style={{ marginTop: "20px", padding: "14px", background: "var(--color-gold-dim)", border: "1px solid rgba(223,180,67,0.2)", borderRadius: "var(--radius-md)", fontSize: "0.8rem", color: "var(--color-gold)", lineHeight: 1.5 }}>
-              🛡️ **Guardian Mode Suggested**: Deploy emergency reserves and configure heirs immediately to resolve warnings.
+            <div style={{ marginTop: "20px", padding: "14px", background: "var(--color-gold-dim)", border: "1px solid rgba(223,180,67,0.2)", borderRadius: "var(--radius-md)", fontSize: "0.8rem", color: "var(--color-gold)", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: "8px" }}>
+              <GuardianModeIcon size={16} color="var(--color-gold)" style={{ flexShrink: 0, marginTop: "2px" }} />
+              <div>
+                <strong>Guardian Mode Suggested</strong>: Deploy emergency reserves and configure heirs immediately to resolve warnings.
+              </div>
             </div>
           ) : (
-            <div style={{ marginTop: "20px", padding: "14px", background: "var(--color-safe-dim)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "var(--radius-md)", fontSize: "0.8rem", color: "var(--color-safe)" }}>
-              ✓ **All Triggers Addressed**: Guardian mode is actively enforcing policy rules.
+            <div style={{ marginTop: "20px", padding: "14px", background: "var(--color-safe-dim)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "var(--radius-md)", fontSize: "0.8rem", color: "var(--color-safe)", display: "flex", alignItems: "center", gap: "8px" }}>
+              <Check size={16} color="var(--color-safe)" style={{ flexShrink: 0 }} />
+              <div>
+                <strong>All Triggers Addressed</strong>: Guardian mode is actively enforcing policy rules.
+              </div>
             </div>
           )}
         </motion.div>

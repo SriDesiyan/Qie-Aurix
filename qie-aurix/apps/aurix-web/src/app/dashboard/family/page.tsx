@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Plus, Users, ShieldCheck } from "lucide-react";
+import { Home, Plus, Users, ShieldCheck, Info } from "lucide-react";
 import VaultCard from "../../../components/VaultCard";
 import StatusPill from "../../../components/StatusPill";
 
@@ -137,8 +137,9 @@ export default function FamilyPage() {
                   />
                 </div>
 
-                <div style={{ padding: "12px 14px", background: "rgba(223, 180, 67, 0.05)", border: "1px solid rgba(223, 180, 67, 0.15)", borderRadius: "var(--radius-md)", fontSize: "0.75rem", color: "var(--color-gold)", lineHeight: 1.4 }}>
-                  💡 Heirs can claim their allocations after the lock duration expires and their identity is verified.
+                <div style={{ padding: "12px 14px", background: "rgba(223, 180, 67, 0.05)", border: "1px solid rgba(223, 180, 67, 0.15)", borderRadius: "var(--radius-md)", fontSize: "0.75rem", color: "var(--color-gold)", lineHeight: 1.4, display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Info size={14} style={{ flexShrink: 0 }} />
+                  <span>Heirs can claim their allocations after the lock duration expires and their identity is verified.</span>
                 </div>
 
                 <button id="create-vault-btn" type="submit" className="aurix-btn aurix-btn-gold" style={{ width: "100%" }} disabled={creating}>

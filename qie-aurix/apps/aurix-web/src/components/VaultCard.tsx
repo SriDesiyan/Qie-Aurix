@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ShieldAlert, ArrowUpRight, ShieldCheck, Clock, Users } from "lucide-react";
+import FamilyVaultIcon from "./icons/FamilyVaultIcon";
 
 interface Heir {
   address: string;
@@ -44,8 +45,8 @@ export default function VaultCard({ domainName, balanceUsd, timeLockDays, heirs,
           >
             Family Vault
           </span>
-          <h3 style={{ marginTop: "10px", fontSize: "1.25rem", color: "var(--color-text-primary)" }}>
-            🏠 {domainName}
+          <h3 style={{ marginTop: "10px", fontSize: "1.25rem", color: "var(--color-text-primary)", display: "flex", alignItems: "center", gap: "8px" }}>
+            <FamilyVaultIcon size={20} color="var(--color-gold)" /> {domainName}
           </h3>
         </div>
         <div style={{ textAlign: "right" }}>

@@ -208,6 +208,7 @@ class RecoveryClaim(BaseModel):
     amount:           str
     target_contract:  str
     proof_signature:  str
+    tx_hash:          Optional[str] = None
     status:           ClaimStatus = ClaimStatus.PENDING
     submitted_at:     int
 

@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, ShieldAlert, Sparkles, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Sparkles, RefreshCw, ChevronDown, ChevronUp, Search, Check } from "lucide-react";
 import AuditRing from "../../../components/AuditRing";
 import StatusPill from "../../../components/StatusPill";
+import { useSession } from "../../../context/SessionContext";
 
 const MOCK_AUDIT = {
   overall_integrity: 88.4,
@@ -49,6 +50,7 @@ export default function AuditPage() {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const { getActiveNetworkLabel } = useSession();
 
   const runAudit = async () => {
     setRunning(true);
@@ -77,7 +79,11 @@ export default function AuditPage() {
           disabled={running}
           style={{ padding: "10px 22px", fontSize: "0.875rem" }}
         >
-          {running ? "Scanning Nodes..." : "🔍 Run Safety Audit"}
+          {running ? "Scanning Nodes..." : (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <Search size={14} /> Run Safety Audit
+            </span>
+          )}
         </button>
       </motion.div>
 
@@ -85,7 +91,7 @@ export default function AuditPage() {
       {running && (
         <motion.div className="aurix-card" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "0.8125rem", color: "var(--color-text-secondary)" }}>
-            <span>Deploying audit queries to QIE Testnet nodes...</span>
+            <span>Deploying audit queries to {getActiveNetworkLabel()} nodes...</span>
             <span>{progress}%</span>
           </div>
           <div className="progress-track" style={{ height: "8px" }}>
@@ -173,9 +179,13 @@ export default function AuditPage() {
 
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 {contract.findings.length === 0 ? (
-                  <span style={{ fontSize: "0.6875rem", color: "var(--color-safe)", fontWeight: 700, textTransform: "uppercase" }}>✓ No Findings</span>
+                  <span style={{ fontSize: "0.6875rem", color: "var(--color-safe)", fontWeight: 700, textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <ShieldCheck size={12} /> No Findings
+                  </span>
                 ) : (
-                  <span style={{ fontSize: "0.6875rem", color: "var(--color-amber)", fontWeight: 700, textTransform: "uppercase" }}>⚠️ {contract.findings.length} Warning</span>
+                  <span style={{ fontSize: "0.6875rem", color: "var(--color-amber)", fontWeight: 700, textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                    <ShieldAlert size={12} /> {contract.findings.length} Warning{contract.findings.length > 1 ? "s" : ""}
+                  </span>
                 )}
                 {expanded === contract.contract_name ? <ChevronUp size={16} style={{ color: "var(--color-text-muted)" }} /> : <ChevronDown size={16} style={{ color: "var(--color-text-muted)" }} />}
               </div>

@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, RefreshCw, FileCheck2, ArrowUpRight } from "lucide-react";
+import { HelpCircle, RefreshCw, FileCheck2, ArrowUpRight, Info } from "lucide-react";
 import RecoveryClaimPanel from "../../../components/RecoveryClaimPanel";
 import StatusPill from "../../../components/StatusPill";
+import AuditLayerIcon from "../../../components/icons/AuditLayerIcon";
+import TrustGraphIcon from "../../../components/icons/TrustGraphIcon";
+import RecoveryLayerIcon from "../../../components/icons/RecoveryLayerIcon";
 
 const MOCK_CLAIMS = [
   {
@@ -140,8 +143,9 @@ export default function RecoveryPage() {
                   />
                 </div>
 
-                <div style={{ padding: "12px 14px", background: "rgba(6, 182, 212, 0.05)", border: "1px solid rgba(6, 182, 212, 0.15)", borderRadius: "var(--radius-md)", fontSize: "0.75rem", color: "var(--color-cyan)" }}>
-                  💡 Ownership payload builds as: <code style={{ fontFamily: "monospace" }}>keccak256(claimId, token, amount, claimant, target)</code>
+                <div style={{ padding: "12px 14px", background: "rgba(6, 182, 212, 0.05)", border: "1px solid rgba(6, 182, 212, 0.15)", borderRadius: "var(--radius-md)", fontSize: "0.75rem", color: "var(--color-cyan)", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <Info size={14} style={{ flexShrink: 0 }} />
+                  <span>Ownership payload builds as: <code style={{ fontFamily: "monospace" }}>keccak256(claimId, token, amount, claimant, target)</code></span>
                 </div>
 
                 <button
@@ -178,25 +182,34 @@ export default function RecoveryPage() {
           <motion.div className="aurix-card" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <h3 style={{ marginBottom: "18px" }}>Recovery Process</h3>
             {[
-              { step: 1, title: "Anchor Claim", desc: "Construct and sign an accidental-transfer proof payload with your QIE Pass.", icon: "📝" },
-              { step: 2, title: "Multi-Signature Verifying", desc: "The decentralized oracle validates the transaction receipt off-chain.", icon: "🔍" },
-              { step: 3, title: "Permissionless Claim", desc: "Unlock and transfer the tokens directly back into your address.", icon: "💰" },
-            ].map((s) => (
-              <div key={s.step} style={{ display: "flex", gap: "14px", marginBottom: "16px" }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: "50%",
-                  background: "var(--color-gold-dim)", border: "1px solid rgba(223,180,67,0.25)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.9rem", flexShrink: 0,
-                }}>
-                  {s.icon}
+              { step: 1, title: "Anchor Claim", desc: "Construct and sign an accidental-transfer proof payload with your QIE Pass.", icon: AuditLayerIcon },
+              { step: 2, title: "Multi-Signature Verifying", desc: "The decentralized oracle validates the transaction receipt off-chain.", icon: TrustGraphIcon },
+              { step: 3, title: "Permissionless Claim", desc: "Unlock and transfer the tokens directly back into your address.", icon: RecoveryLayerIcon },
+            ].map((s) => {
+              const StepIcon = s.icon;
+              return (
+                <div key={s.step} style={{ display: "flex", gap: "14px", marginBottom: "16px" }}>
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    background: "var(--color-gold-dim)",
+                    border: "1px solid rgba(223, 180, 67, 0.25)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--color-gold)",
+                    flexShrink: 0,
+                  }}>
+                    <StepIcon size={16} />
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "2px" }}>{s.title}</h4>
+                    <p style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", lineHeight: 1.4 }}>{s.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--color-text-primary)", marginBottom: "2px" }}>{s.title}</h4>
-                  <p style={{ fontSize: "0.78rem", color: "var(--color-text-secondary)", lineHeight: 1.4 }}>{s.desc}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </motion.div>
 
           {/* Active claims panel */}

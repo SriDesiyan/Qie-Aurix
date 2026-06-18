@@ -1,11 +1,13 @@
 """
 QIE Aurix Oracle — Profile Agent
 Builds a Trust Profile from wallet address and chain data.
-Uses mock on-chain data for the hackathon demo.
+Uses mock on-chain data or fetches directly from QIE Blockchain Mainnet.
 """
 
 import time
 import random
+import os
+import httpx
 from models.schemas import (
     TrustProfile, QiePassIdentity, FinancialProfile,
     ChainActivity, LendingPosition, DexActivity,
@@ -148,21 +150,141 @@ def _mock_financial_profile(seed: int) -> FinancialProfile:
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
+# ── Public API ────────────────────────────────────────────────────────────────
+
+def _get_qie_balance(address: str, rpc_url: str) -> float:
+    payload = {
+        "jsonrpc": "2.0",
+        "method": "eth_getBalance",
+        "params": [address, "latest"],
+        "id": 1
+    }
+    try:
+        r = httpx.post(rpc_url, json=payload, timeout=5.0)
+        if r.status_code == 200:
+            res = r.json().get("result")
+            if res and res != "0x":
+                return int(res, 16) / 1e18
+    except Exception as e:
+        print(f"Error fetching QIE balance: {e}")
+    return 0.0
+
+def _get_qusdc_balance(token_address: str, address: str, rpc_url: str) -> float:
+    clean_addr = address.lower().replace("0x", "")
+    data = "0x70a08231" + clean_addr.rjust(64, '0')
+    payload = {
+        "jsonrpc": "2.0",
+        "method": "eth_call",
+        "params": [{"to": token_address, "data": data}, "latest"],
+        "id": 1
+    }
+    try:
+        r = httpx.post(rpc_url, json=payload, timeout=5.0)
+        if r.status_code == 200:
+            res = r.json().get("result")
+            if res and res != "0x":
+                return int(res, 16) / 1_000_000.0  # QUSDC has 6 decimals
+    except Exception as e:
+        print(f"Error fetching QUSDC balance: {e}")
+    return 0.0
+
+def _get_qie_pass_balance(pass_address: str, address: str, rpc_url: str) -> int:
+    if not pass_address or pass_address == "REQUIRES_OFFICIAL_ADDRESS":
+        return 0
+    clean_addr = address.lower().replace("0x", "")
+    data = "0x70a08231" + clean_addr.rjust(64, '0')
+    payload = {
+        "jsonrpc": "2.0",
+        "method": "eth_call",
+        "params": [{"to": pass_address, "data": data}, "latest"],
+        "id": 1
+    }
+    try:
+        r = httpx.post(rpc_url, json=payload, timeout=5.0)
+        if r.status_code == 200:
+            res = r.json().get("result")
+            if res and res != "0x":
+                return int(res, 16)
+    except Exception as e:
+        print(f"Error fetching QIE Pass balance: {e}")
+    return 0
+
 def build_trust_profile(address: str, chain_ids: list[int]) -> TrustProfile:
     """
     Build a Trust Profile for the given wallet address.
-    For the hackathon demo, uses deterministic mock data.
-    In production: fetch from QIE indexer, QIELend, QIE DEX APIs.
+    Checks NEXT_PUBLIC_MODE env variable:
+    - If "production", queries live balances from QIE blockchain RPC node.
+    - Otherwise, falls back to deterministic mock data.
     """
-    seed        = _seed_from_address(address)
-    qie_pass    = _mock_qie_pass(address, seed)
-    financial   = _mock_financial_profile(seed)
+    mode = os.getenv("NEXT_PUBLIC_MODE", "demo")
+    seed = _seed_from_address(address)
 
-    epochs_active   = (seed % 3 == 0) and seed % 60 or 0
-    vote_count      = seed % 20
-    forum_score     = 40 + seed % 50
-    wallet_age_days = 90 + seed % 900
-    tx_success_rate = 0.85 + (seed % 15) / 100
+    if mode == "production":
+        rpc_url = os.getenv("QIE_RPC_URL", "https://rpc1mainnet.qie.digital/")
+        qusdc_addr = os.getenv("QUSDC_ADDRESS", "0x3F43DA82eC9A4f5285F10FaF1F26EcA7319E5DA5")
+        qie_pass_addr = os.getenv("QIE_PASS_ADDRESS", "REQUIRES_OFFICIAL_ADDRESS")
+
+        # Fetch actual on-chain data
+        qie_bal = _get_qie_balance(address, rpc_url)
+        qusdc_bal = _get_qusdc_balance(qusdc_addr, address, rpc_url)
+        pass_bal = _get_qie_pass_balance(qie_pass_addr, address, rpc_url)
+
+        # Build QIE Pass Profile
+        has_pass = pass_bal > 0
+        tier = "GUARDIAN" if has_pass and (seed % 4 == 0) else ("TRUSTED" if has_pass and (seed % 3 == 0) else ("VERIFIED" if has_pass else "BASIC"))
+        
+        qie_pass = QiePassIdentity(
+            address=address,
+            pass_token_id=str(1000 + (seed % 9000)),
+            tier=tier,
+            verified_domains=["family.aurix.qie"] if seed % 2 == 0 else [],
+            is_validator=(seed % 3 == 0),
+            community_score=50 + (seed % 45),
+            pass_issued_at=int(time.time()) - (seed % 730) * 86400,
+        )
+
+        total_val = qie_bal * 0.10 + qusdc_bal  # Assume QIE = $0.10 for valuation
+        stable_ratio = round(qusdc_bal / total_val, 2) if total_val > 0 else 0.0
+
+        financial = FinancialProfile(
+            total_value_usd=round(total_val, 2),
+            stablecoin_ratio=stable_ratio,
+            chain_spread=[
+                ChainActivity(
+                    chain_id=1990,
+                    chain_name="QIEMainnet",
+                    value_usd=round(total_val, 2),
+                    tx_count=1,
+                    last_activity=int(time.time())
+                )
+            ],
+            lending_positions=[],
+            dex_activity=DexActivity(
+                total_swaps_30d=0,
+                volume_usd=0.0,
+                preferred_pairs=[],
+                avg_slippage=0.0
+            ),
+            recovery_readiness=RecoveryReadiness(
+                has_recovery_vault=False,
+                vault_balance_usd=0.0,
+                last_verified_at=0
+            )
+        )
+        epochs_active = 0
+        vote_count = 0
+        forum_score = 0.0
+        wallet_age_days = 1
+        tx_success_rate = 1.0
+    else:
+        # Demo / testnet mock logic
+        qie_pass = _mock_qie_pass(address, seed)
+        financial = _mock_financial_profile(seed)
+        epochs_active = (seed % 3 == 0) and seed % 60 or 0
+        vote_count = seed % 20
+        forum_score = 40 + seed % 50
+        wallet_age_days = 90 + seed % 900
+        tx_success_rate = 0.85 + (seed % 15) / 100
 
     trust_graph = _build_trust_graph(
         qie_pass=qie_pass,

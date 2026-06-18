@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 /**
  * @title TrustProfileRegistry
  * @author QIE Aurix Protocol
@@ -17,7 +22,9 @@ pragma solidity ^0.8.24;
  *
  * QIE Pass identity is the root of trust.
  */
-contract TrustProfileRegistry {
+contract TrustProfileRegistry is Pausable {
+    using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
 
     // ── Structs ──────────────────────────────────────────────────────────────
 
@@ -58,6 +65,9 @@ contract TrustProfileRegistry {
     /// @dev address → timestamp of last weight update
     mapping(address => uint64) public lastWeightUpdate;
 
+    /// @dev User nonces to prevent replay attacks
+    mapping(address => uint256) public nonces;
+
     /// @dev QIE Pass contract address (set at construction, updatable by owner)
     address public qiePassContract;
 
@@ -79,6 +89,7 @@ contract TrustProfileRegistry {
     error Unauthorized();
     error ProfileNotFound();
     error InvalidCommitment();
+    error NoQiePass();
 
     // ── Modifiers ─────────────────────────────────────────────────────────────
 
@@ -113,9 +124,19 @@ contract TrustProfileRegistry {
         bytes32 commitment,
         string calldata ipfsCid,
         uint256 score,
-        uint256 trustScore
-    ) external {
+        uint256 trustScore,
+        bytes calldata signature
+    ) external whenNotPaused {
         if (commitment == bytes32(0)) revert InvalidCommitment();
+        if (IERC721(qiePassContract).balanceOf(msg.sender) == 0) revert NoQiePass();
+
+        // Verify oracle signature
+        bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, commitment, ipfsCid, score, trustScore, nonces[msg.sender]));
+        bytes32 ethSignedMessageHash = messageHash.toEthSignedMessageHash();
+        address recovered = ethSignedMessageHash.recover(signature);
+        if (!authorizedOracles[recovered]) revert Unauthorized();
+
+        nonces[msg.sender]++;
 
         ProfileRecord storage rec = _profiles[msg.sender];
         bool isNew = rec.owner == address(0);
@@ -144,7 +165,7 @@ contract TrustProfileRegistry {
         uint256 newScore,
         uint256 newTrustScore,
         bytes32 newCommitment
-    ) external onlyOracle {
+    ) external onlyOracle whenNotPaused {
         ProfileRecord storage rec = _profiles[user];
         if (rec.owner == address(0)) revert ProfileNotFound();
 
@@ -160,7 +181,7 @@ contract TrustProfileRegistry {
     /**
      * @notice Toggle Guardian Mode for the caller's profile.
      */
-    function setGuardianMode(bool active) external {
+    function setGuardianMode(bool active) external whenNotPaused {
         ProfileRecord storage rec = _profiles[msg.sender];
         if (rec.owner == address(0)) revert ProfileNotFound();
         rec.guardianActive = active;
@@ -205,7 +226,7 @@ contract TrustProfileRegistry {
         address[] calldata tokens,
         string[]  calldata symbols,
         uint256[] calldata weightsBps
-    ) external onlyOracle {
+    ) external onlyOracle whenNotPaused {
         require(tokens.length == symbols.length && symbols.length == weightsBps.length,
                 "Array length mismatch");
 
@@ -259,6 +280,15 @@ contract TrustProfileRegistry {
     }
 
     function transferAdmin(address newAdmin) external onlyAdmin {
+        require(newAdmin != address(0), "Invalid admin address");
         admin = newAdmin;
+    }
+
+    function pause() external onlyAdmin {
+        _pause();
+    }
+
+    function unpause() external onlyAdmin {
+        _unpause();
     }
 }

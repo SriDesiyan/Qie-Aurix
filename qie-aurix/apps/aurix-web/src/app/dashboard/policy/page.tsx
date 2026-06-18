@@ -5,12 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShieldCheck, ToggleLeft, ToggleRight, Sparkles, AlertCircle } from "lucide-react";
 import PolicyComposer from "../../../components/PolicyComposer";
 import StatusPill from "../../../components/StatusPill";
+import DEXIcon from "../../../components/icons/DEXIcon";
+import LendingIcon from "../../../components/icons/LendingIcon";
+import RecoveryLayerIcon from "../../../components/icons/RecoveryLayerIcon";
+import FamilyVaultIcon from "../../../components/icons/FamilyVaultIcon";
 
 const INITIAL_POLICIES = [
-  { id: "volatility-shield", name: "Volatility Shield", desc: "Swap a percentage of volatile assets to QUSDC stablecoins when drawdown exceeds target threshold.", icon: "📈", active: true, threshold: "30% drawdown" },
-  { id: "lending-guard",     name: "Lending Guard",     desc: "Initiate dynamic rebalancing checks and repayments when position Health Factor drops below threshold.", icon: "💊", active: true, threshold: "HF < 1.4" },
-  { id: "recovery-guard",    name: "Recovery Guard",    desc: "Maintain constant funding reserves inside the recovery gate to ensure claims verification operations.", icon: "🔄", active: false, threshold: "$500 minimum" },
-  { id: "family-protect",    name: "Family Protection", desc: "Release alert feeds to heir addresses if the named vault balance drops below the minimum limit.", icon: "🏠", active: false, threshold: "$1,000 minimum" },
+  { id: "volatility-shield", name: "Volatility Shield", desc: "Swap a percentage of volatile assets to QUSDC stablecoins when drawdown exceeds target threshold.", icon: <DEXIcon size={24} />, active: true, threshold: "30% drawdown" },
+  { id: "lending-guard",     name: "Lending Guard",     desc: "Initiate dynamic rebalancing checks and repayments when position Health Factor drops below threshold.", icon: <LendingIcon size={24} />, active: true, threshold: "HF < 1.4" },
+  { id: "recovery-guard",    name: "Recovery Guard",    desc: "Maintain constant funding reserves inside the recovery gate to ensure claims verification operations.", icon: <RecoveryLayerIcon size={24} />, active: false, threshold: "$500 minimum" },
+  { id: "family-protect",    name: "Family Protection", desc: "Release alert feeds to heir addresses if the named vault balance drops below the minimum limit.", icon: <FamilyVaultIcon size={24} />, active: false, threshold: "$1,000 minimum" },
 ];
 
 export default function PolicyPage() {

@@ -4,6 +4,23 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+
+interface IAurixRecoveryGate {
+    enum ClaimStatus { PENDING, VERIFIED, RELEASED, REJECTED }
+    
+    struct RecoveryClaim {
+        address  claimant;
+        address  token;
+        uint256  amount;
+        address  targetContract;
+        uint64   submittedAt;
+        ClaimStatus status;
+    }
+    
+    function getClaim(bytes32 claimId) external view returns (RecoveryClaim memory);
+    function notifyReleased(bytes32 claimId) external;
+}
 
 /**
  * @title IResilienceCondition
@@ -42,7 +59,7 @@ interface IResilienceCondition {
  * and call back into this vault when protection should activate.
  * This separates trigger logic from vault logic to allow pluggable resilience modules.
  */
-contract ResiliencePolicyVault is ReentrancyGuard {
+contract ResiliencePolicyVault is ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     // ── Structs ──────────────────────────────────────────────────────────────
@@ -136,7 +153,7 @@ contract ResiliencePolicyVault is ReentrancyGuard {
     function createPolicy(
         uint256 depositAmount,
         uint32  riskThreshold
-    ) external nonReentrant {
+    ) external nonReentrant whenNotPaused {
         if (_policies[msg.sender].active) revert PolicyAlreadyActive();
         if (depositAmount == 0) revert ZeroAmount();
 
@@ -160,7 +177,7 @@ contract ResiliencePolicyVault is ReentrancyGuard {
     /**
      * @notice Add more QUSDC to an existing policy's reserve.
      */
-    function depositReserve(uint256 amount) external nonReentrant policyExists(msg.sender) {
+    function depositReserve(uint256 amount) external nonReentrant whenNotPaused policyExists(msg.sender) {
         if (amount == 0) revert ZeroAmount();
         IERC20(qusdcToken).safeTransferFrom(msg.sender, address(this), amount);
         _policies[msg.sender].reserveBalance += amount;
@@ -176,7 +193,7 @@ contract ResiliencePolicyVault is ReentrancyGuard {
     function activateEmergencyLock(
         address user,
         uint16  lockDays
-    ) external onlyOracle policyExists(user) {
+    ) external onlyOracle whenNotPaused policyExists(user) {
         ProtectionPolicy storage p = _policies[user];
         p.emergencyLocked = true;
         p.lockUntil       = uint64(block.timestamp + uint256(lockDays) * 1 days);
@@ -186,7 +203,7 @@ contract ResiliencePolicyVault is ReentrancyGuard {
     /**
      * @notice Release emergency lock after expiry.
      */
-    function releaseEmergencyLock() external policyExists(msg.sender) {
+    function releaseEmergencyLock() external whenNotPaused policyExists(msg.sender) {
         ProtectionPolicy storage p = _policies[msg.sender];
         if (!p.emergencyLocked) return;
         if (block.timestamp < p.lockUntil) revert LockNotExpired();
@@ -198,7 +215,7 @@ contract ResiliencePolicyVault is ReentrancyGuard {
     /**
      * @notice Withdraw reserve when not locked.
      */
-    function withdrawReserve(uint256 amount) external nonReentrant policyExists(msg.sender) {
+    function withdrawReserve(uint256 amount) external nonReentrant whenNotPaused policyExists(msg.sender) {
         ProtectionPolicy storage p = _policies[msg.sender];
         if (p.emergencyLocked && block.timestamp < p.lockUntil) revert EmergencyLocked();
         if (amount > p.reserveBalance) revert InsufficientBalance();
@@ -233,7 +250,7 @@ contract ResiliencePolicyVault is ReentrancyGuard {
      *
      * @param condition Address of an IResilienceCondition implementation
      */
-    function registerCondition(address condition) external onlyAdmin {
+    function registerCondition(address condition) external onlyAdmin whenNotPaused {
         require(!registeredConditions[condition], "Condition already registered");
         registeredConditions[condition] = true;
         _conditions.push(IResilienceCondition(condition));
@@ -250,7 +267,7 @@ contract ResiliencePolicyVault is ReentrancyGuard {
      *
      * @param user The user whose policy conditions to evaluate
      */
-    function evaluateConditions(address user) external policyExists(user) {
+    function evaluateConditions(address user) external whenNotPaused policyExists(user) {
         for (uint256 i = 0; i < _conditions.length; i++) {
             try _conditions[i].checkTrigger(address(this), user) {
                 emit ConditionTriggered(address(_conditions[i]), user);
@@ -279,5 +296,38 @@ contract ResiliencePolicyVault is ReentrancyGuard {
 
     function setQusdcToken(address token) external onlyAdmin {
         qusdcToken = token;
+    }
+
+    function transferAdmin(address newAdmin) external onlyAdmin {
+        require(newAdmin != address(0), "Invalid admin address");
+        admin = newAdmin;
+    }
+
+    function pause() external onlyAdmin {
+        _pause();
+    }
+
+    function unpause() external onlyAdmin {
+        _unpause();
+    }
+
+    /**
+     * @notice Recover accidental token transfers verified by AurixRecoveryGate.
+     * @param recoveryGate   Address of the AurixRecoveryGate contract
+     * @param claimId        ID of the verified recovery claim
+     */
+    function recoverAccidentalTokens(
+        address recoveryGate,
+        bytes32 claimId
+    ) external onlyAdmin nonReentrant {
+        IAurixRecoveryGate gate = IAurixRecoveryGate(recoveryGate);
+        IAurixRecoveryGate.RecoveryClaim memory claim = gate.getClaim(claimId);
+        
+        if (claim.status != IAurixRecoveryGate.ClaimStatus.VERIFIED) revert Unauthorized();
+        if (claim.targetContract != address(this)) revert Unauthorized();
+        
+        gate.notifyReleased(claimId);
+        
+        IERC20(claim.token).safeTransfer(claim.claimant, claim.amount);
     }
 }

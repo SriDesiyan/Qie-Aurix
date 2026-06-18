@@ -1,11 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { LayoutDashboard, RefreshCw, KeyRound, ShieldAlert, Sliders, Activity } from "lucide-react";
+import { LayoutDashboard, RefreshCw, KeyRound, ShieldAlert, Sliders, Activity, LogOut } from "lucide-react";
 import AurixLogo from "../../components/AurixLogo";
 import DynamicBackground from "../../components/DynamicBackground";
+import { useSession } from "../../context/SessionContext";
 
 const NAV_ITEMS = [
   { href: "/dashboard",          icon: LayoutDashboard, label: "Overview" },
@@ -17,6 +19,12 @@ const NAV_ITEMS = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { address, networkMode, getActiveNetworkLabel, clearSession } = useSession();
+
+  const displayAddress = address || "0x7a4bc9120000000000000000000000000000c912";
+  const truncatedAddress = displayAddress.startsWith("0x") && displayAddress.length === 42
+    ? `${displayAddress.slice(0, 6)}...${displayAddress.slice(-4)}`
+    : displayAddress;
 
   return (
     <div className="app-shell">
@@ -70,6 +78,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
+        {/* Disconnect Button */}
+        <div style={{ padding: "0 16px 16px" }}>
+          <button
+            onClick={clearSession}
+            className="aurix-btn aurix-btn-outline w-full"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              padding: "10px 16px",
+              fontSize: "0.8125rem",
+              borderColor: "rgba(239, 68, 68, 0.2)",
+              color: "var(--color-critical)",
+              cursor: "pointer",
+            }}
+          >
+            <LogOut size={14} /> Disconnect Wallet
+          </button>
+        </div>
+
         {/* Oracle Status Card */}
         <div style={{ padding: "20px 24px", borderTop: "1px solid var(--color-border)" }}>
           <div style={{ fontSize: "0.6875rem", color: "var(--color-text-muted)", marginBottom: "8px", letterSpacing: "0.08em", fontWeight: 700, textTransform: "uppercase" }}>
@@ -107,16 +136,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               style={{
                 fontSize: "0.6875rem",
                 fontWeight: 700,
-                background: "rgba(0, 245, 212, 0.08)",
-                border: "1px solid rgba(0, 245, 212, 0.25)",
-                color: "#00f5d4",
+                background: networkMode === "MAINNET" ? "rgba(223, 180, 67, 0.08)" : "rgba(0, 245, 212, 0.08)",
+                border: networkMode === "MAINNET" ? "1px solid rgba(223, 180, 67, 0.25)" : "1px solid rgba(0, 245, 212, 0.25)",
+                color: networkMode === "MAINNET" ? "var(--color-gold)" : "#00f5d4",
                 padding: "4px 12px",
                 borderRadius: "var(--radius-full)",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
+                transition: "all 0.3s ease",
               }}
             >
-              QIE Testnet
+              {getActiveNetworkLabel()}
             </span>
             <div
               style={{
@@ -130,7 +160,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 boxShadow: "inset 0 1px 4px rgba(0,0,0,0.2)",
               }}
             >
-              0x7a4b...c912
+              {truncatedAddress}
             </div>
           </div>
         </header>

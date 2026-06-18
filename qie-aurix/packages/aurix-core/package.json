@@ -8,6 +8,9 @@
     "build": "tsc --noEmit",
     "clean": "rimraf dist"
   },
+  "dependencies": {
+    "ethers": "^6.11.1"
+  },
   "devDependencies": {
     "typescript": "^5.3.3"
   }

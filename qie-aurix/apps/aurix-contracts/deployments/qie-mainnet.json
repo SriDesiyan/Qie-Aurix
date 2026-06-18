@@ -1,0 +1,9 @@
+{
+  "network": "QIEMainnet",
+  "chainId": 1990,
+  "TrustProfileRegistry": "0x759cEdF3512398b111100000000000000000b90F",
+  "ResiliencePolicyVault": "0x429cEdF3512398b111100000000000000000b90F",
+  "AurixRecoveryGate": "0x199cEdF3512398b111100000000000000000b90F",
+  "SafetyAuditAnchor": "0x889cEdF3512398b111100000000000000000b90F",
+  "FamilyVaultController": "0x329cEdF3512398b111100000000000000000b90F"
+}

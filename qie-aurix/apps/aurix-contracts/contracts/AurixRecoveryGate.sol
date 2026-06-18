@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /**
  * @title AurixRecoveryGate
@@ -33,7 +34,7 @@ import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
  * Also adds txHash-based deduplication so the same accidental
  * transfer cannot be claimed twice.
  */
-contract AurixRecoveryGate is ReentrancyGuard {
+contract AurixRecoveryGate is ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
     using ECDSA for bytes32;
     using MessageHashUtils for bytes32;
@@ -139,7 +140,7 @@ contract AurixRecoveryGate is ReentrancyGuard {
         uint256 amount,
         address targetContract,
         bytes calldata claimantSignature
-    ) external nonReentrant {
+    ) external nonReentrant whenNotPaused {
         if (_usedClaimIds[claimId]) revert ClaimAlreadyExists();
         if (amount == 0) revert ZeroAmount();
         if (msg.sender == address(0)) revert InvalidClaimant();
@@ -166,7 +167,7 @@ contract AurixRecoveryGate is ReentrancyGuard {
     /**
      * @notice Oracle verifies a pending claim after off-chain validation.
      */
-    function verifyClaim(bytes32 claimId) external onlyVerifier {
+    function verifyClaim(bytes32 claimId) external onlyVerifier whenNotPaused {
         RecoveryClaim storage c = claims[claimId];
         require(c.status == ClaimStatus.PENDING, "Not pending");
         c.status = ClaimStatus.VERIFIED;
@@ -174,25 +175,23 @@ contract AurixRecoveryGate is ReentrancyGuard {
     }
 
     /**
-     * @notice Release verified funds to the claimant.
-     *         Called by the Aurix contract holding the funds, after oracle verification.
+     * @notice Notify the gate that a claim has been released by the target contract.
+     *         Called by the vault/controller holding the funds.
      */
-    function releaseClaim(bytes32 claimId) external nonReentrant {
+    function notifyReleased(bytes32 claimId) external whenNotPaused nonReentrant {
         RecoveryClaim storage c = claims[claimId];
         if (c.status != ClaimStatus.VERIFIED) revert ClaimNotVerified();
-        if (msg.sender != c.claimant) revert Unauthorized();
+        if (msg.sender != c.targetContract) revert Unauthorized();
 
         c.status = ClaimStatus.RELEASED;
         totalRecovered += c.amount;
-
-        IERC20(c.token).safeTransferFrom(c.targetContract, c.claimant, c.amount);
         emit ClaimReleased(claimId, c.claimant, c.amount);
     }
 
     /**
      * @notice Reject a claim with a reason.
      */
-    function rejectClaim(bytes32 claimId, string calldata reason) external onlyVerifier {
+    function rejectClaim(bytes32 claimId, string calldata reason) external onlyVerifier whenNotPaused {
         RecoveryClaim storage c = claims[claimId];
         require(c.status == ClaimStatus.PENDING, "Not pending");
         c.status = ClaimStatus.REJECTED;
@@ -254,7 +253,7 @@ contract AurixRecoveryGate is ReentrancyGuard {
         address targetContract,
         bytes32 txHash,
         bytes calldata claimantSignature
-    ) external nonReentrant {
+    ) external nonReentrant whenNotPaused {
         if (_usedClaimIds[claimId]) revert ClaimAlreadyExists();
         if (recoveredByTxHash[txHash] != bytes32(0)) revert TxHashAlreadyClaimed();
         if (amount == 0) revert ZeroAmount();
@@ -262,7 +261,7 @@ contract AurixRecoveryGate is ReentrancyGuard {
 
         // Check the amount does not overlap with intentional deposits
         uint256 intentional = intentionalDeposits[targetContract][token];
-        if (amount > intentional + IERC20(token).balanceOf(targetContract) - intentional) {
+        if (amount > IERC20(token).balanceOf(targetContract) - intentional) {
             // Only non-intentional surplus is recoverable
             revert IntentionalDepositConflict();
         }
@@ -295,6 +294,15 @@ contract AurixRecoveryGate is ReentrancyGuard {
     }
 
     function transferAdmin(address newAdmin) external onlyAdmin {
+        require(newAdmin != address(0), "Invalid admin address");
         admin = newAdmin;
+    }
+
+    function pause() external onlyAdmin {
+        _pause();
+    }
+
+    function unpause() external onlyAdmin {
+        _unpause();
     }
 }

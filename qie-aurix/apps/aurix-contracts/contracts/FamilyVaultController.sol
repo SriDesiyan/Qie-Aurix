@@ -4,6 +4,28 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
+interface IAurixRecoveryGate {
+    enum ClaimStatus { PENDING, VERIFIED, RELEASED, REJECTED }
+    
+    struct RecoveryClaim {
+        address  claimant;
+        address  token;
+        uint256  amount;
+        address  targetContract;
+        uint64   submittedAt;
+        ClaimStatus status;
+    }
+    
+    function getClaim(bytes32 claimId) external view returns (RecoveryClaim memory);
+    function notifyReleased(bytes32 claimId) external;
+}
+
+interface IQieDomainsResolver {
+    function resolveDomain(string calldata domain) external view returns (address);
+}
 
 /**
  * @title FamilyVaultController
@@ -16,7 +38,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  * claim delay. Heirs can claim assets after the claim delay, verified
  * by QIE Pass presence.
  */
-contract FamilyVaultController is ReentrancyGuard {
+contract FamilyVaultController is ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 
     // ── Structs ──────────────────────────────────────────────────────────────
@@ -35,6 +57,7 @@ contract FamilyVaultController is ReentrancyGuard {
         uint256     balance;             // current balance
         uint64      timeLockUntil;       // earliest claimable timestamp (0 = no lock)
         uint32      heirCount;
+        uint16      totalAllocationBps;  // cumulative allocation basis points (max 10000)
         bool        active;
         bool        claimable;           // owner sets this to allow heir claims
     }
@@ -47,6 +70,7 @@ contract FamilyVaultController is ReentrancyGuard {
     mapping(string => bytes32)    private _domainToVaultId;                // domain → vaultId
 
     address public qiePassContract;
+    address public qieDomainsResolver;
     address public admin;
 
     uint256 public vaultCount;
@@ -70,6 +94,7 @@ contract FamilyVaultController is ReentrancyGuard {
     error NotAnHeir();
     error InvalidAllocation();
     error ZeroAmount();
+    error NoQiePass();
 
     // ── Modifiers ─────────────────────────────────────────────────────────────
 
@@ -107,8 +132,13 @@ contract FamilyVaultController is ReentrancyGuard {
         string calldata domainName,
         address         assetToken,
         uint16          timeLockDays
-    ) external returns (bytes32 vaultId) {
+    ) external whenNotPaused returns (bytes32 vaultId) {
         if (_domainToVaultId[domainName] != bytes32(0)) revert DomainAlreadyTaken();
+
+        if (qieDomainsResolver != address(0)) {
+            address resolved = IQieDomainsResolver(qieDomainsResolver).resolveDomain(domainName);
+            if (resolved != address(0) && resolved != msg.sender) revert Unauthorized();
+        }
 
         vaultId = keccak256(abi.encodePacked(msg.sender, domainName, block.timestamp));
 
@@ -121,6 +151,7 @@ contract FamilyVaultController is ReentrancyGuard {
                 ? uint64(block.timestamp + uint256(timeLockDays) * 1 days)
                 : 0,
             heirCount:     0,
+            totalAllocationBps: 0,
             active:        true,
             claimable:     false
         });
@@ -136,7 +167,7 @@ contract FamilyVaultController is ReentrancyGuard {
      * @notice Fund the vault with the designated asset token.
      */
     function fundVault(bytes32 vaultId, uint256 amount)
-        external nonReentrant vaultExists(vaultId)
+        external nonReentrant whenNotPaused vaultExists(vaultId)
     {
         if (amount == 0) revert ZeroAmount();
         IERC20(_vaults[vaultId].assetToken).safeTransferFrom(msg.sender, address(this), amount);
@@ -154,10 +185,12 @@ contract FamilyVaultController is ReentrancyGuard {
         address heir,
         uint16  allocationBps,
         uint64  claimDelaySecs
-    ) external vaultExists(vaultId) onlyVaultOwner(vaultId) {
+    ) external whenNotPaused vaultExists(vaultId) onlyVaultOwner(vaultId) {
         if (allocationBps == 0 || allocationBps > 10000) revert InvalidAllocation();
 
         FamilyVault storage v = _vaults[vaultId];
+        if (v.totalAllocationBps + allocationBps > 10000) revert InvalidAllocation();
+
         uint32 idx = v.heirCount;
 
         _heirs[vaultId][idx] = HeirRecord({
@@ -168,6 +201,7 @@ contract FamilyVaultController is ReentrancyGuard {
         });
 
         v.heirCount++;
+        v.totalAllocationBps += allocationBps;
         emit HeirAdded(vaultId, heir, allocationBps);
     }
 
@@ -187,8 +221,10 @@ contract FamilyVaultController is ReentrancyGuard {
      * @notice Heir claims their allocation.
      */
     function claimHeirShare(bytes32 vaultId, uint32 heirIndex)
-        external nonReentrant vaultExists(vaultId)
+        external nonReentrant whenNotPaused vaultExists(vaultId)
     {
+        if (IERC721(qiePassContract).balanceOf(msg.sender) == 0) revert NoQiePass();
+
         FamilyVault storage v = _vaults[vaultId];
         if (!v.claimable) revert VaultNotClaimable();
 
@@ -232,5 +268,42 @@ contract FamilyVaultController is ReentrancyGuard {
 
     function setQiePassContract(address pass) external onlyAdmin {
         qiePassContract = pass;
+    }
+
+    function setQieDomainsResolver(address resolver) external onlyAdmin {
+        qieDomainsResolver = resolver;
+    }
+
+    function transferAdmin(address newAdmin) external onlyAdmin {
+        require(newAdmin != address(0), "Invalid admin address");
+        admin = newAdmin;
+    }
+
+    function pause() external onlyAdmin {
+        _pause();
+    }
+
+    function unpause() external onlyAdmin {
+        _unpause();
+    }
+
+    /**
+     * @notice Recover accidental token transfers verified by AurixRecoveryGate.
+     * @param recoveryGate   Address of the AurixRecoveryGate contract
+     * @param claimId        ID of the verified recovery claim
+     */
+    function recoverAccidentalTokens(
+        address recoveryGate,
+        bytes32 claimId
+    ) external onlyAdmin nonReentrant {
+        IAurixRecoveryGate gate = IAurixRecoveryGate(recoveryGate);
+        IAurixRecoveryGate.RecoveryClaim memory claim = gate.getClaim(claimId);
+        
+        if (claim.status != IAurixRecoveryGate.ClaimStatus.VERIFIED) revert Unauthorized();
+        if (claim.targetContract != address(this)) revert Unauthorized();
+        
+        gate.notifyReleased(claimId);
+        
+        IERC20(claim.token).safeTransfer(claim.claimant, claim.amount);
     }
 }

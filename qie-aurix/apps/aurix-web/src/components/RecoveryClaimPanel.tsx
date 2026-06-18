@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Lock, CheckCircle2, AlertTriangle, Play } from "lucide-react";
+import { ArrowRight, Lock, CheckCircle2, AlertTriangle, Play, Check } from "lucide-react";
 
 interface Claim {
   claim_id: string;
@@ -104,8 +104,8 @@ export default function RecoveryClaimPanel({ claims, onRelease }: ClaimsProps) {
                 </span>
               )}
               {claim.status === "RELEASED" && (
-                <span style={{ fontSize: "0.75rem", color: "var(--color-safe)", fontWeight: 600 }}>
-                  Claim Transferred ✓
+                <span style={{ fontSize: "0.75rem", color: "var(--color-safe)", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  Claim Transferred <Check size={14} />
                 </span>
               )}
             </div>

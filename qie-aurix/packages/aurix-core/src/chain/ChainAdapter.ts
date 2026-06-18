@@ -4,6 +4,16 @@
 // by changing a single adapter. No hard-coded chain IDs anywhere else.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import {
+  QIE_MAINNET_CHAIN_ID,
+  QIE_MAINNET_RPC_URL,
+  QIE_MAINNET_EXPLORER_URL,
+  QUSDC_MAINNET_ADDRESS,
+  QIE_PASS_ADDRESS,
+  QIE_DOMAINS_ADDRESS
+} from "../constants/qie-network";
+import mainnetAddresses from "../constants/qie-mainnet.json";
+
 export interface QIEContractMap {
   pass:    string;
   dex:     string;
@@ -55,6 +65,14 @@ const PLACEHOLDER_AURIX_CONTRACTS: AurixContractMap = {
   familyVaultController:  process.env.NEXT_PUBLIC_FAMILY_VAULT_CONTROLLER  ?? ZERO,
 };
 
+const MAINNET_AURIX_CONTRACTS: AurixContractMap = {
+  trustProfileRegistry:   process.env.NEXT_PUBLIC_TRUST_PROFILE_REGISTRY   ?? mainnetAddresses.TrustProfileRegistry,
+  resiliencePolicyVault:  process.env.NEXT_PUBLIC_RESILIENCE_POLICY_VAULT  ?? mainnetAddresses.ResiliencePolicyVault,
+  aurixRecoveryGate:      process.env.NEXT_PUBLIC_AURIX_RECOVERY_GATE      ?? mainnetAddresses.AurixRecoveryGate,
+  safetyAuditAnchor:      process.env.NEXT_PUBLIC_SAFETY_AUDIT_ANCHOR      ?? mainnetAddresses.SafetyAuditAnchor,
+  familyVaultController:  process.env.NEXT_PUBLIC_FAMILY_VAULT_CONTROLLER  ?? mainnetAddresses.FamilyVaultController,
+};
+
 // ─── QIE Testnet Adapter ───────────────────────────────────────────────────────
 
 export const QIE_TESTNET_ADAPTER: ChainAdapter = {
@@ -70,21 +88,36 @@ export const QIE_TESTNET_ADAPTER: ChainAdapter = {
   isTestnet:      true,
 };
 
-// ─── QIE Mainnet Adapter (future) ─────────────────────────────────────────────
+const MAINNET_QIE_CONTRACTS: QIEContractMap = {
+  pass:    QIE_PASS_ADDRESS,
+  dex:     ZERO,
+  lend:    ZERO,
+  qusdc:   QUSDC_MAINNET_ADDRESS,
+  domains: QIE_DOMAINS_ADDRESS,
+  bridge:  ZERO,
+};
+
+// ─── QIE Mainnet Adapter ─────────────────────────────────────────────
 
 export const QIE_MAINNET_ADAPTER: ChainAdapter = {
-  ...QIE_TESTNET_ADAPTER,
-  name:        "qie-mainnet",
-  displayName: "QIE Mainnet",
-  chainId:     1,                   // TODO: replace with real QIE mainnet chain ID
-  rpcUrl:      "https://rpc.qie.network",
-  explorerUrl: "https://explorer.qie.network",
-  isTestnet:   false,
+  name:         "qie-mainnet",
+  displayName:  "QIEMainnet",
+  chainId:      QIE_MAINNET_CHAIN_ID,
+  rpcUrl:       QIE_MAINNET_RPC_URL,
+  explorerUrl:  QIE_MAINNET_EXPLORER_URL,
+  nativeCurrency: { name: "QIE", symbol: "QIE", decimals: 18 },
+  qieContracts:   MAINNET_QIE_CONTRACTS,
+  aurixContracts: MAINNET_AURIX_CONTRACTS,
+  blockTimeMs:    3000,
+  isTestnet:      false,
 };
 
 // ─── Active chain (swap this one export to change networks) ───────────────────
 
-export const activeChain: ChainAdapter = QIE_TESTNET_ADAPTER;
+export const activeChain: ChainAdapter =
+  typeof process !== "undefined" && process.env.NEXT_PUBLIC_MODE === "production"
+    ? QIE_MAINNET_ADAPTER
+    : QIE_TESTNET_ADAPTER;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

@@ -102,23 +102,80 @@ def get_audit(address: str):
     return run_audit(profile)
 
 
+def _verify_signature(
+    claim_id: str,
+    token: str,
+    amount: int,
+    claimant: str,
+    target_contract: str,
+    signature: str,
+    tx_hash: str = None
+) -> bool:
+    try:
+        from eth_account import Account
+        from eth_account.messages import encode_defunct
+        from eth_abi.packed import encode_packed
+        from eth_utils import keccak
+        
+        cid_bytes = bytes.fromhex(claim_id.replace("0x", ""))
+        token_bytes = bytes.fromhex(token.replace("0x", ""))
+        claimant_bytes = bytes.fromhex(claimant.replace("0x", ""))
+        target_bytes = bytes.fromhex(target_contract.replace("0x", ""))
+        
+        if tx_hash:
+            tx_bytes = bytes.fromhex(tx_hash.replace("0x", ""))
+            types = ['bytes32', 'address', 'uint256', 'address', 'address', 'bytes32']
+            values = [cid_bytes, token_bytes, amount, claimant_bytes, target_bytes, tx_bytes]
+        else:
+            types = ['bytes32', 'address', 'uint256', 'address', 'address']
+            values = [cid_bytes, token_bytes, amount, claimant_bytes, target_bytes]
+            
+        packed = encode_packed(types, values)
+        msg_hash = keccak(packed)
+        encoded_msg = encode_defunct(primitive=msg_hash)
+        recovered_address = Account.recover_message(encoded_msg, signature=signature)
+        return recovered_address.lower() == claimant.lower()
+        
+    except Exception:
+        # Fallback to node script
+        import subprocess
+        import os
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        script_path = os.path.join(script_dir, "verify_sig.js")
+        
+        cmd = ["node", script_path, claim_id, token, str(amount), claimant, target_contract, signature, tx_hash or ""]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        return res.stdout.strip() == "true"
+
+
 # ── Recovery ──────────────────────────────────────────────────────────────────
 
 @app.post("/recovery/verify")
 def verify_recovery(claim: RecoveryClaim):
     """
-    Verify a recovery claim.
-    In production: validate signature against QIE Pass, check contract balance.
-    For demo: approve any claim with a non-empty signature.
+    Verify a recovery claim using cryptographic signature validation.
     """
     if not claim.proof_signature:
         raise HTTPException(status_code=400, detail="Missing proof signature")
 
-    # Simulate verification delay
+    # Verify signature
+    is_valid = _verify_signature(
+        claim_id=claim.claim_id,
+        token=claim.token_address,
+        amount=int(claim.amount),
+        claimant=claim.claimant_address,
+        target_contract=claim.target_contract,
+        signature=claim.proof_signature,
+        tx_hash=claim.tx_hash
+    )
+
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid signature proof")
+
     return {
         "claim_id": claim.claim_id,
         "status":   ClaimStatus.VERIFIED,
-        "message":  "Claim verified. Call releaseClaim() on AurixRecoveryGate to receive funds.",
+        "message":  "Claim verified. Use recoverAccidentalTokens() on the target contract to receive funds.",
         "verified_at": int(time.time()),
     }
 
