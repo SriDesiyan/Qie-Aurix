@@ -11,6 +11,8 @@
 [![Solidity](https://img.shields.io/badge/Smart_Contracts-Solidity-363636?style=for-the-badge&logo=solidity)](https://soliditylang.org)
 [![Hardhat](https://img.shields.io/badge/Toolchain-Hardhat-fcf003?style=for-the-badge&logo=hardhat&logoColor=black)](https://hardhat.org)
 [![Open Source](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](https://opensource.org/licenses/MIT)
+![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
+
 
 QIE Aurix is a decentralized financial resilience platform for Web3 users who want more than a wallet, more than an auditor, and more than a trading dashboard.
 
@@ -337,30 +339,18 @@ Submit Recovery Request
 Test the accidental-transfer recovery flow.
 Screenshots & Media
 
-Put these files inside an assets/ folder in the repository so GitHub renders them correctly.
+![Cover Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct1.png)
+![Problem Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct2.png)
+![Solution Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/CT3.png)
+![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct4.png)
+![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct5.png)
+![Guardian Mode Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct6.png)
+![QIE Ecosystem Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct7.png)
+![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct8.png)
 
-Demo Video
+![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct9.png)
+![Vision Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct10.png)
 
-Add your Veo 3 intro video here:
-
-[Watch the QIE Aurix demo](assets/demo-video.mp4)
-Presentation Slides
-![Cover Slide](assets/slide-01-cover.png)
-![Problem Slide](assets/slide-02-problem.png)
-![Current Solutions Slide](assets/slide-03-current-solutions.png)
-![Solution Slide](assets/slide-04-solution.png)
-![Intelligence Engine Slide](assets/slide-05-intelligence-engine.png)
-![Guardian Mode Slide](assets/slide-06-guardian-mode.png)
-![Unique Innovations Slide](assets/slide-07-innovations.png)
-![QIE Ecosystem Slide](assets/slide-08-qie-integration.png)
-![Architecture Slide](assets/slide-09-architecture.png)
-![Vision Slide](assets/slide-10-vision.png)
-Live App Screens
-![Dashboard](assets/dashboard.png)
-![Recovery Layer](assets/recovery.png)
-![Family Vault](assets/family-vault.png)
-![Audit Panel](assets/audit.png)
-![Policy Builder](assets/policy.png)
 Repository Structure
 qie-aurix/
 ├── apps/
