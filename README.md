@@ -1,4 +1,4 @@
-  # QIE Aurix
+# QIE Aurix
 
 ## Financial Resilience Guardian for Web3
 
@@ -11,8 +11,6 @@
 [![Solidity](https://img.shields.io/badge/Smart_Contracts-Solidity-363636?style=for-the-badge&logo=solidity)](https://soliditylang.org)
 [![Hardhat](https://img.shields.io/badge/Toolchain-Hardhat-fcf003?style=for-the-badge&logo=hardhat&logoColor=black)](https://hardhat.org)
 [![Open Source](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](https://opensource.org/licenses/MIT)
-![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
-
 
 QIE Aurix is a decentralized financial resilience platform for Web3 users who want more than a wallet, more than an auditor, and more than a trading dashboard.
 
@@ -150,6 +148,7 @@ Risk Analysis
 Protection Plan
      ↓
 On-Chain Actions
+
 1. Identity Root
 
 The user connects through QIE Pass or a supported QIE wallet identity.
@@ -174,7 +173,7 @@ Guardian Mode™
 
 Guardian Mode™ is the centerpiece of Aurix.
 
-It is the “protect now” state of the platform.
+It is the protect now state of the platform.
 
 When activated, Aurix can:
 
@@ -338,19 +337,30 @@ Submit Recovery Request
 Test the accidental-transfer recovery flow.
 Screenshots & Media
 
-![Cover Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct1.png)
-![Problem Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct2.png)
-![Solution Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/CT3.png)
-![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct4.png)
-![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct5.png)
-![Guardian Mode Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct6.png)
-![QIE Ecosystem Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct7.png)
-![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct8.png)
+Put these files inside an assets/ folder in the repository so GitHub renders them correctly.
 
-![](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct9.png)
-![Vision Slide](https://github.com/SriDesiyan/Qie-Aurix/blob/ce42d5be79c7a808b82adca1710ed5c8eda9e7a9/qie%20presentaion/ct10.png)
+Demo Video
 
+Add your Veo 3 intro video here:
 
+[Watch the QIE Aurix demo](assets/demo-video.mp4)
+Presentation Slides
+![Cover Slide](assets/slide-01-cover.png)
+![Problem Slide](assets/slide-02-problem.png)
+![Current Solutions Slide](assets/slide-03-current-solutions.png)
+![Solution Slide](assets/slide-04-solution.png)
+![Intelligence Engine Slide](assets/slide-05-intelligence-engine.png)
+![Guardian Mode Slide](assets/slide-06-guardian-mode.png)
+![Unique Innovations Slide](assets/slide-07-innovations.png)
+![QIE Ecosystem Slide](assets/slide-08-qie-integration.png)
+![Architecture Slide](assets/slide-09-architecture.png)
+![Vision Slide](assets/slide-10-vision.png)
+Live App Screens
+![Dashboard](assets/dashboard.png)
+![Recovery Layer](assets/recovery.png)
+![Family Vault](assets/family-vault.png)
+![Audit Panel](assets/audit.png)
+![Policy Builder](assets/policy.png)
 Repository Structure
 qie-aurix/
 ├── apps/
@@ -389,53 +399,40 @@ Security Principles
 
 Aurix is built around a few non-negotiable safety rules:
 
-Cryptographic signatures for recovery and authorization
-Anti-replay protections using nonces
-Role controls for admin and emergency actions
-Immutable audit anchoring for transparency
-Timelocked release logic for inheritance and vaults
-Pause controls for emergency mitigation
-Verified identity flows through QIE Pass
+Cryptographic Signatures: All recovery requests require claimant wallet signatures verified by on-chain ECDSA checks.
+Anti-Replay Protections: Nonces are incorporated into policies to prevent transaction replication.
+Role Controls: Core admin actions and pause triggers are guarded by strict access controls.
+Immutable Anchoring: Audits are anchored via safety logs to prevent retro-active modification of scores.
+Timelock Safe-guards: Heir distributions are locked behind configurable release delay parameters.
 
 Security is not an add-on. It is the core product.
 
 Roadmap
-Phase 1 ── Phase 2 ── Phase 3 ── Phase 4 ── Phase 5
- Personal    Family       DAO        Pools     Autonomous
+  Phase 1 ── Phase 2 ── Phase 3 ── Phase 4 ── Phase 5
+  Personal    Family      DAO       Pools     Autonomous
 Phase 1 — Personal Financial Resilience
 
-Launch score engine, trust profile, and basic protection policies.
+Launch score engine and rebalancing policies.
 
 Phase 2 — Family Protection
 
-Add multi-generational time-locked vaults mapped to QIE Pass IDs.
+Multi-generational time-locked vaults mapped to QIE Pass IDs.
 
 Phase 3 — DAO Treasury Protection
 
-Extend the system to multi-sig and institutional portfolio protection.
+Multi-signature protection policies for institutional portfolios.
 
 Phase 4 — Community Resilience Pools
 
-Support shared protection pools and community safety mechanisms.
+Decentralized insurance models for pool insurance.
 
 Phase 5 — Autonomous Financial Guardians
 
-Enable advanced real-time protection logic for financial safety.
+Real-time transaction firewalls and advanced safety automation.
 
 Why QIE Aurix Matters
 
-Most Web3 platforms optimize for profits and yield.
-
-QIE Aurix optimizes for:
-
-survival
-recovery
-resilience
-continuity
-family safety
-long-term trust
-
-That makes it useful not just for hackathons, but for real users and real Web3 adoption.
+While most DeFi platforms optimize for profits and yield, QIE Aurix optimizes for survival, recovery, and resilience. By introducing automated safety rails, we build a platform where users can secure their assets against unexpected drawdowns, transaction mistakes, and generational inheritance complexities.
 
 Team
 TECH AVERIX
@@ -443,7 +440,7 @@ Sri Desiyan V — Team Lead
 College — Chennai Institute of Technology
 Event — QIE Hackathon 2026
 
-“We don’t help users chase profits. We help them survive, recover, and thrive in Web3.”
+"We don't help users chase profits. We help them survive, recover, and thrive in Web3."
 
 License
 
