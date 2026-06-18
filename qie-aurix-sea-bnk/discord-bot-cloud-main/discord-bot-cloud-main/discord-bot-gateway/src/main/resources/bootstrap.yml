@@ -1,0 +1,59 @@
+server:
+  port: 25580
+
+spring:
+  application:
+    name: analysis-report-gateway
+  profiles:
+    active: local
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    gateway:
+      enabled: false
+
+---
+spring:
+  profiles: local #本地调试环境
+  cloud:
+    nacos:
+      discovery:
+        enabled: false # disable discovery
+      config:
+        enabled: false # disable config
+
+---
+spring:
+  profiles: single #单机环境
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:172.29.32.36:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:172.29.32.36:8848}
+
+---
+spring:
+  profiles: dev #测试环境
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:bdnode1:8848,bdnode2:8848,bdnode3:8848}
+        namespace: c5a7ecbf-8be3-487b-b090-0772e6a26c64
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:bdnode1:8848,bdnode2:8848,bdnode3:8848}
+        namespace: c5a7ecbf-8be3-487b-b090-0772e6a26c64
+
+---
+spring:
+  profiles: cluster,test,cloud #生产环境/集成测试环境
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:bdnode1:8848,bdnode2:8848,bdnode3:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:bdnode1:8848,bdnode2:8848,bdnode3:8848}

@@ -1,0 +1,85 @@
+spring:
+  application:
+    name: accuracy-service
+  profiles:
+    active: local
+  main:
+    allow-bean-definition-overriding: true
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+server:
+  port: 19899
+  connection-timeout: 120000
+  tomcat:
+    uri-encoding: utf-8
+    min-spare-threads: 20
+    max-threads: 1000
+    max-connections: 1000
+    accept-count: 1000
+  compression:
+    enabled: true
+    mime-types: text/html,text/plain,application/json
+    min-response-size: 2048
+security:
+  basic:
+    enabled: false
+management.security.enabled: false
+
+management:
+  health:
+    redis:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+---
+spring:
+  profiles: local #本地调试环境
+  cloud:
+    nacos:
+      discovery:
+        enabled: false # disable discovery
+      config:
+        enabled: false # disable config
+
+---
+spring:
+  profiles: single #单机环境
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:node1:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:node1:8848}
+
+---
+spring:
+  profiles: dev #测试环境
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:node1:8848,node2:8848,node3:8848}
+        namespace: c5a7ecbf-8be3-487b-b090-0772e6a26c64
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:node1:8848,node2:8848,node3:8848}
+        namespace: c5a7ecbf-8be3-487b-b090-0772e6a26c64
+
+---
+spring:
+  profiles: cluster,test,cloud #生产环境/集成测试环境
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:node1:8848,node2:8848,node3:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:node1:8848,node2:8848,node3:8848}

@@ -1,0 +1,44 @@
+version: "2"
+
+services:
+
+  ## Analysis Report Gateway  25580
+  discord_bot_gateway:
+    image: registry.cn-hangzhou.aliyuncs.com/gaoling_test/discord-bot-gateway:latest
+    container_name: discord_bot_gateway
+    restart: on-failure
+    privileged: true
+    environment:
+      - JVM_XMS=1024m
+      - JVM_XMX=1024m
+    mem_limit: 1050m
+    network_mode: host
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "10"
+    volumes:
+      - ./data/discord-bot-gateway/logs:/var/logs
+      - /etc/hosts:/etc/hosts
+
+  ## analysis report  19894
+  discord_bot_service:
+    image: registry.cn-hangzhou.aliyuncs.com/gaoling_test/discord-bot-service:latest
+    container_name: discord_bot_service
+    restart: on-failure
+    privileged: true
+    env_file:
+      - discord-bot.env
+    environment:
+      - JVM_XMS=2048m
+      - JVM_XMX=2048m
+    mem_limit: 2050m
+    network_mode: host
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "10"
+    volumes:
+      - ./data/discord_bot_service/logs:/var/logs
+      - ./data/discord_bot_service/upload:/upload
+      - /etc/hosts:/etc/hosts

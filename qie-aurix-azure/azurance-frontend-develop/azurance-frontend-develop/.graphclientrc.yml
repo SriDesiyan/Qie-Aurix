@@ -1,0 +1,11 @@
+# .graphclientrc.yml
+sources:
+  - name: azurance
+    handler:
+      graphql:
+        endpoint: https://api.studio.thegraph.com/query/67556/azurance/version/latest
+
+
+documents:
+  - ./queries/active-insurance.graphql
+  - ./queries/inactive-insurance.graphql

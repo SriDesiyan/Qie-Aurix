@@ -1,0 +1,23 @@
+{
+  "name": "solana-oracle-example",
+  "version": "1.0.0",
+  "description": "solana oracle example",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx ts-node client/main.ts",
+    "deploy": "cargo build-bpf && solana program deploy target/deploy/banksea_oracle_example.so"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@solana/spl-token": "^0.3.4",
+    "@solana/web3.js": "^1.31.0",
+    "@types/mocha": "^9.0.0",
+    "js-sha256": "^0.9.0",
+    "mz": "^2.7.0",
+    "ts-mocha": "^8.0.0",
+    "ts-node": "^10.4.0",
+    "yaml": "^1.10.2"
+  }
+}

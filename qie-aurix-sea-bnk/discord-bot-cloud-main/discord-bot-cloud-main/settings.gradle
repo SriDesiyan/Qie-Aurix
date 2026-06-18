@@ -1,0 +1,6 @@
+rootProject.name = 'discord-bot-cloud'
+
+
+include 'discord-bot-service'
+include 'discord-bot-gateway'
+

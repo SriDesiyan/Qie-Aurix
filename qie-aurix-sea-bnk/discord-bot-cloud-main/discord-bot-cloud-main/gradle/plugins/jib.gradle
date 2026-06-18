@@ -1,0 +1,58 @@
+import java.text.SimpleDateFormat
+
+apply plugin: "com.google.cloud.tools.jib"
+
+def projectVersion = project.getVersion()
+def tag = projectVersion.endsWith("-SNAPSHOT") ?
+        projectVersion.replace("-SNAPSHOT", "") + "_" + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()).toString() :
+        projectVersion.toString()
+
+jib {
+    allowInsecureRegistries = true
+    from {
+        image = 'registry.cn-hangzhou.aliyuncs.com/gaoling/openjdk8:1.0.0'
+        auth {
+            username = 'ali_zhijunsoh'
+            password = 'dev{~Zu73G,b#'
+        }
+    }
+    to {
+        image = "registry.cn-hangzhou.aliyuncs.com/gaoling_test/${project.name}"
+        auth {
+            username = 'ali_zhijunsoh'
+            password = 'dev{~Zu73G,b#'
+        }
+        tags = [tag]
+    }
+    container {
+        labels = [
+                'maintainer': 'sjz <suzhijun@ruijie.com.cn>',
+                'version'   : '$version',
+                'licenses'  : 'MIT'
+        ]
+        environment = [
+                //'MAIN_CLASS_NAME': mainClassName,
+                'JVM_XMS'        : '1g',
+                'JVM_XMX'        : '1g',
+                'JVM_XMN'        : '512m',
+                'JVM_MS'         : '128m',
+                'JVM_MMS'        : '320m',
+                'SERVICE_DEBUG'  : 'n',
+                'BASE_DIR'       : '/var',
+                'PROFILES_ACTIVE': 'prod',
+                'TIME_ZONE'      : 'Asia/Shanghai',
+                'SK_AGENT_EN'    : 'y',
+                'SK_SERVICE'     : 'monitorNode:11800',
+                'SERVICE_NAME'   : project.name
+        ]
+        ports = ['8080']
+        entrypoint = ["/sbin/tini", "--", "/entrypoint.sh"]
+        creationTime = 'USE_CURRENT_TIMESTAMP'
+    }
+    extraDirectories {
+        paths = "${rootDir}/gradle/plugins/jib"
+        permissions = [
+                '/entrypoint.sh' : '755'
+        ]
+    }
+}

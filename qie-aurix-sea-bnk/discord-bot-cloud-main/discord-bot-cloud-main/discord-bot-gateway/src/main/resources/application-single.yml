@@ -1,0 +1,3 @@
+spring:
+  profiles:
+    include: gateway-common,gateway-single

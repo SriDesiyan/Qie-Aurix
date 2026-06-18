@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+
+    <!--    <springProperty scope="context" name="app_name" source="spring.application.name" defaultValue="app"/>-->
+    <!--    <property name="APP_NAME" value="${app_name}"/>-->
+    <include resource="com/gecko/boot/logging/logback/base.xml"/>
+
+    <!-- default,local -->
+    <springProfile name="default,local">
+        <logger name="com.banksea.cloud" level="DEBUG"/>
+        <logger name="com.alibaba.nacos" level="WARN"/>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- test,dev -->
+    <springProfile name="test,dev">
+        <logger name="com.banksea.cloud" level="INFO"/>
+        <logger name="com.alibaba.nacos" level="WARN"/>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE-INFO"/>
+            <appender-ref ref="FILE-ERROR"/>
+        </root>
+    </springProfile>
+
+    <!-- prod -->
+    <springProfile name="prod">
+        <logger name="com.banksea.cloud" level="WARN"/>
+        <logger name="com.alibaba.nacos" level="WARN"/>
+        <root level="WARN">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE-INFO"/>
+            <appender-ref ref="FILE-ERROR"/>
+        </root>
+    </springProfile>
+
+</configuration>

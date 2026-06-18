@@ -1,0 +1,34 @@
+apply plugin: 'org.hidetake.ssh'
+
+ssh.settings {
+    knownHosts = allowAnyHosts
+}
+
+remotes {
+    discord {
+        role 'discord'
+        host = '54.249.39.160'
+        user = 'root'
+        password = 'Tokyo[2021]'
+    }
+}
+
+task discordBot {
+    def composeFile = "/opt/discord-bot/service/docker-compose.yaml"
+    def serviceName = project.name.replace("-", "_")
+    doLast {
+        ssh.run {
+            session(remotes.role('discord')) {
+                println "execute docker login registry.cn-hangzhou.aliyuncs.com -u ali_zhijunsoh -p dev{~Zu73G,b#"
+                execute "docker login registry.cn-hangzhou.aliyuncs.com -u ali_zhijunsoh -p dev{~Zu73G,b#"
+                println "execute docker-compose -f $composeFile pull $serviceName"
+                execute "docker-compose -f $composeFile pull $serviceName"
+                println "execute docker-compose -f $composeFile up -d $serviceName"
+                execute "docker-compose -f $composeFile up -d $serviceName"
+            }
+        }
+    }
+}
+
+System.setProperty("sendCredentialsOverHttp", 'true')
+tasks.discordBot.dependsOn 'jib'

@@ -1,0 +1,29 @@
+name: Hardhat Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      PINATA_API_KEY: ${{ secrets.PINATA_API_KEY }}
+      POLYGON_AMOY_RPC: ${{ secrets.POLYGON_AMOY_RPC  }}
+      POLYGON_MAINNET_RPC: ${{ secrets.POLYGON_AMOY_RPC  }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 20 # You can specify your Node.js version here
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Run Hardhat Tests
+        run: npx hardhat test

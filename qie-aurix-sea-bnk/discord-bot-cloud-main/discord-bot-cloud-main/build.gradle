@@ -1,0 +1,96 @@
+buildscript {
+    repositories {
+        maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
+        maven { url "https://maven.aliyun.com/repository/jcenter" }
+
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url "https://maven.aliyun.com/repository/central" }
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7.1"
+        classpath 'org.hidetake:gradle-ssh-plugin:2.10.1'
+        classpath "org.openapitools:openapi-generator-gradle-plugin:4.2.1"
+        classpath "gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:1.6.1"
+    }
+}
+
+allprojects {
+    apply plugin: 'idea'
+    group 'discord.bot.cloud'
+
+    repositories {
+        maven {
+            url 'https://maven.aliyun.com/repository/public'
+        }
+        maven {
+            credentials {
+                username '60068757f3636bc517f19b7b'
+                password 'cS9V9-wKUT(0'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2056150-release-35nQqG/'
+        }
+        maven {
+            credentials {
+                username '60068757f3636bc517f19b7b'
+                password 'cS9V9-wKUT(0'
+            }
+            url 'https://packages.aliyun.com/maven/repository/2056150-snapshot-wjfruO/'
+        }
+    }
+}
+
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: "io.spring.dependency-management"
+    apply from: rootProject.file("gradle/plugins/jib.gradle")
+    apply from: rootProject.file("gradle/plugins/discordBot.gradle")
+
+    [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    // for application dependency
+    buildscript {
+        repositories {
+            maven { url "https://maven.aliyun.com/repository/central" }
+            maven { url "https://repo.spring.io/release" }
+            maven { url "https://repo.spring.io/milestone" }
+            mavenLocal()
+        }
+    }
+
+    repositories {
+        maven { url "https://maven.aliyun.com/repository/jcenter" }
+        maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
+        maven { url "https://mirrors.tencent.com/nexus/repository/maven-public/" }
+        mavenLocal()
+    }
+
+    // declre cloud dependency version
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            mavenBom "com.alibaba.cloud:spring-cloud-alibaba-dependencies:${springCloudAlibabaVersion}"
+        }
+    }
+
+    dependencies {
+        // lombok
+        annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
+        implementation("org.projectlombok:lombok:${lombokVersion}")
+        testAnnotationProcessor("org.projectlombok:lombok:${lombokVersion}")
+        testCompileOnly("org.projectlombok:lombok:${lombokVersion}")
+    }
+
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+
+}
+
+wrapper() {
+    gradleVersion = '6.6'
+}

@@ -1,0 +1,27 @@
+---
+spring:
+  profiles: gateway-common
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: '*'
+            allowCredentials: true
+      httpclient:
+        response-timeout: 30m
+
+---
+spring:
+  profiles: gateway-single
+  cloud:
+    gateway:
+      routes:
+        - id: discord-bot
+          uri: http://localhost:19899
+          predicates:
+            - Path=/discord/**
+          filters:
+            - StripPrefix=1

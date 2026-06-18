@@ -1,0 +1,32 @@
+type InsurancePool @entity {
+  id: ID!
+  multiplier: BigInt!
+  multiplierDecimals: BigInt!
+  maturityTimestamp: BigInt!
+  staleTimestamp: BigInt!
+  underlyingToken: Token!
+  fee: BigInt!
+  feeDecimals: BigInt!
+  feeTo: Bytes!
+  condition: Bytes!
+  buyerToken: Token!
+  sellerToken: Token!
+  status: Int!
+
+  buyerShares: BigInt!
+  sellerShares: BigInt!
+  totalShares: BigInt!
+
+  buyerValue: BigInt!
+  sellerValue: BigInt!
+  totalValue: BigInt!
+
+  createdAt: BigInt!
+}
+
+type Token @entity {
+  id: ID!
+  name: String!
+  symbol: String!
+  decimals: Int!
+}
