@@ -1,0 +1,20 @@
+{
+  "name": "@aurix/core-services",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Internal engine layer for QIE Aurix — resilience, recovery, protection, valuation, and audit services.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@aurix/core": "*",
+    "@aurix/score": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "rimraf": "^5.0.5"
+  }
+}
