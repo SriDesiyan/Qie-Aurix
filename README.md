@@ -24,6 +24,9 @@ The goal is simple:
 Check here:
 [View Demo](https://qie-hackathon-aurix-web.vercel.app/)
 
+Demo Video Link:
+
+[![Watch the video](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://youtu.be/klRADobFHfs)
 
 ---
 
