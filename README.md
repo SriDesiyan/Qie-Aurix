@@ -26,7 +26,7 @@ Check here:
 
 Demo Video Link:
 
-[![Watch the video](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://youtu.be/klRADobFHfs)
+[![Watch the video](https://img.youtube.com/vi/klRADobFHfs/maxresdefault.jpg)](https://youtu.be/klRADobFHfs)
 
 ---
 
